@@ -257,6 +257,7 @@ class BasePresenceHandler(abc.ABC):
     async def set_state(
         self,
         target_user: UserID,
+        device_id: Optional[str],
         state: JsonDict,
         ignore_status_msg: bool = False,
         force_notify: bool = False,
@@ -266,6 +267,7 @@ class BasePresenceHandler(abc.ABC):
 
         Args:
             target_user: The ID of the user to set the presence state of.
+            device_id: the device that the user is setting the presence state of.
             state: The presence state as a JSON dictionary.
             ignore_status_msg: True to ignore the "status_msg" field of the `state` dict.
                 If False, the user's current status will be updated.
@@ -386,7 +388,9 @@ class BasePresenceHandler(abc.ABC):
         # We set force_notify=True here so that this presence update is guaranteed to
         # increment the presence stream ID (which resending the current user's presence
         # otherwise would not do).
-        await self.set_state(UserID.from_string(user_id), state, force_notify=True)
+        await self.set_state(
+            UserID.from_string(user_id), None, state, force_notify=True
+        )
 
     async def is_visible(self, observed_user: UserID, observer_user: UserID) -> bool:
         raise NotImplementedError(
@@ -506,6 +510,7 @@ class WorkerPresenceHandler(BasePresenceHandler):
         # what the spec wants.
         await self.set_state(
             UserID.from_string(user_id),
+            device_id,
             state={"presence": presence_state},
             ignore_status_msg=True,
             is_sync=True,
@@ -604,6 +609,7 @@ class WorkerPresenceHandler(BasePresenceHandler):
     async def set_state(
         self,
         target_user: UserID,
+        device_id: Optional[str],
         state: JsonDict,
         ignore_status_msg: bool = False,
         force_notify: bool = False,
@@ -613,6 +619,7 @@ class WorkerPresenceHandler(BasePresenceHandler):
 
         Args:
             target_user: The ID of the user to set the presence state of.
+            device_id: the device that the user is setting the presence state of.
             state: The presence state as a JSON dictionary.
             ignore_status_msg: True to ignore the "status_msg" field of the `state` dict.
                 If False, the user's current status will be updated.
@@ -634,6 +641,7 @@ class WorkerPresenceHandler(BasePresenceHandler):
         await self._set_state_client(
             instance_name=self._presence_writer_instance,
             user_id=user_id,
+            device_id=device_id,
             state=state,
             ignore_status_msg=ignore_status_msg,
             force_notify=force_notify,
@@ -1010,6 +1018,7 @@ class PresenceHandler(BasePresenceHandler):
         # what the spec wants.
         await self.set_state(
             UserID.from_string(user_id),
+            device_id,
             state={"presence": presence_state},
             ignore_status_msg=True,
             is_sync=True,
@@ -1181,6 +1190,7 @@ class PresenceHandler(BasePresenceHandler):
     async def set_state(
         self,
         target_user: UserID,
+        device_id: Optional[str],
         state: JsonDict,
         ignore_status_msg: bool = False,
         force_notify: bool = False,
@@ -1190,6 +1200,7 @@ class PresenceHandler(BasePresenceHandler):
 
         Args:
             target_user: The ID of the user to set the presence state of.
+            device_id: the device that the user is setting the presence state of.
             state: The presence state as a JSON dictionary.
             ignore_status_msg: True to ignore the "status_msg" field of the `state` dict.
                 If False, the user's current status will be updated.
