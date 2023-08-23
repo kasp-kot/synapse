@@ -24,6 +24,7 @@ from synapse.rest.admin import VersionServlet
 from synapse.rest.client import login, room
 from synapse.server import HomeServer
 from synapse.util import Clock
+from synapse.util.task_scheduler import TaskScheduler
 
 from tests import unittest
 from tests.server import FakeSite, make_request
@@ -362,6 +363,9 @@ class PurgeHistoryTestCase(unittest.HomeserverTestCase):
         self.assertEqual(200, channel.code, msg=channel.json_body)
         self.assertIn("purge_id", channel.json_body)
         purge_id = channel.json_body["purge_id"]
+
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # get status
         channel = self.make_request(

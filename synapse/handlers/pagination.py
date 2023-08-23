@@ -298,14 +298,9 @@ class PaginationHandler:
         """Carry out a history purge on a room.
 
         Args:
-            purge_id: The ID for this purge.
             room_id: The room to purge from
             token: topological token to delete events before
             delete_local_events: True to delete local events as well as remote ones
-            update_rooms_to_delete_table: True if we don't want to update/persist this
-                purge history action to the DB to be restorable. Used with the retention
-                functionality since we don't need to explicitly restore those, they
-                will be relaunch by the retention logic.
         """
         try:
             async with self._worker_locks.acquire_read_write_lock(
@@ -335,15 +330,15 @@ class PaginationHandler:
     async def get_delete_tasks_by_room(
         self, room_id: str, only_active: Optional[bool] = False
     ) -> List[ScheduledTask]:
-        """Get complete or active delete tasks by room
+        """Get complete, failed or active delete tasks by room
 
         Args:
             room_id: room_id that is deleted
-            only_active: if True, completed tasks will be omitted
+            only_active: if True, completed&failed tasks will be omitted
         """
         statuses = [TaskStatus.ACTIVE]
         if not only_active:
-            statuses.append(TaskStatus.COMPLETE)
+            statuses += [TaskStatus.COMPLETE, TaskStatus.FAILED]
 
         return await self._task_scheduler.get_tasks(
             actions=[PURGE_ROOM_ACTION_NAME, SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME],
@@ -374,9 +369,7 @@ class PaginationHandler:
 
         Args:
             room_id: room to be purged
-            delete_id: the delete ID for this purge
             force: set true to skip checking for joined users.
-            shutdown_response: optional response coming from the shutdown phase
         """
         logger.info("starting purge room_id=%s force=%s", room_id, force)
 

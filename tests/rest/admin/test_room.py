@@ -556,7 +556,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         delete_id = channel.json_body["delete_id"]
 
         # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # get status
         channel = self.make_request(
@@ -676,7 +676,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         delete_id1 = channel.json_body["delete_id"]
 
         # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # go ahead
         self.reactor.advance(TaskScheduler.KEEP_TASKS_FOR_MS / 1000 / 2)
@@ -694,7 +694,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         delete_id2 = channel.json_body["delete_id"]
 
         # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # get status
         channel = self.make_request(
@@ -755,7 +755,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         )
 
         # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # second call to delete room
         second_channel = self.make_request(
@@ -1172,7 +1172,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
             expect_new_room: if we expect that a new room was created
         """
         # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # get information by room_id
         channel_room_id = self.make_request(
