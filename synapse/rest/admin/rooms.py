@@ -36,14 +36,7 @@ from synapse.rest.admin._base import (
 )
 from synapse.storage.databases.main.room import RoomSortOrder
 from synapse.streams.config import PaginationConfig
-from synapse.types import (
-    JsonDict,
-    RoomID,
-    ScheduledTask,
-    TaskStatus,
-    UserID,
-    create_requester,
-)
+from synapse.types import JsonDict, RoomID, ScheduledTask, UserID, create_requester
 from synapse.types.state import StateFilter
 from synapse.util import json_decoder
 
@@ -169,15 +162,12 @@ class DeleteRoomStatusByRoomIdRestServlet(RestServlet):
 
         delete_tasks = await self._pagination_handler.get_delete_tasks_by_room(room_id)
 
-        response = []
-        for delete_task in delete_tasks:
-            # We ignore scheduled deletes because currently they are only used
-            # for automatically purging forgotten room after X time.
-            if delete_task.status != TaskStatus.SCHEDULED:
-                response += [_convert_delete_task_to_response(delete_task)]
-
-        if response:
-            return HTTPStatus.OK, {"results": cast(JsonDict, response)}
+        if delete_tasks:
+            return HTTPStatus.OK, {
+                "results": [
+                    _convert_delete_task_to_response(task) for task in delete_tasks
+                ],
+            }
         else:
             raise NotFoundError("No delete task for room_id '%s' found" % room_id)
 

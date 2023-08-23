@@ -322,14 +322,23 @@ class PaginationHandler:
         """
         return await self._task_scheduler.get_task(delete_id)
 
-    async def get_delete_tasks_by_room(self, room_id: str) -> List[ScheduledTask]:
-        """Get all active delete statuses by room
+    async def get_delete_tasks_by_room(
+        self, room_id: str, only_active: Optional[bool] = False
+    ) -> List[ScheduledTask]:
+        """Get complete or active delete tasks by room
 
         Args:
             room_id: room_id that is deleted
+            only_active: if True, completed tasks will be omitted
         """
+        statuses = [TaskStatus.ACTIVE]
+        if not only_active:
+            statuses.append(TaskStatus.COMPLETE)
+
         return await self._task_scheduler.get_tasks(
-            actions=["purge_room", "shutdown_and_purge_room"], resource_id=room_id
+            actions=["purge_room", "shutdown_and_purge_room"],
+            resource_id=room_id,
+            statuses=statuses,
         )
 
     async def _purge_room(
@@ -685,13 +694,6 @@ class PaginationHandler:
 
         return (TaskStatus.COMPLETE, shutdown_result, None)
 
-    async def get_current_delete_tasks(self, room_id: str) -> List[ScheduledTask]:
-        return await self._task_scheduler.get_tasks(
-            actions=["purge_history", "purge_room", "shutdown_and_purge_room"],
-            resource_id=room_id,
-            statuses=[TaskStatus.ACTIVE, TaskStatus.SCHEDULED],
-        )
-
     async def start_shutdown_and_purge_room(
         self,
         room_id: str,
@@ -706,7 +708,7 @@ class PaginationHandler:
         Returns:
             unique ID for this delete transaction.
         """
-        if len(await self.get_current_delete_tasks(room_id)) > 0:
+        if len(await self.get_delete_tasks_by_room(room_id, only_active=True)) > 0:
             raise SynapseError(400, "Purge already in progress for %s" % (room_id,))
 
         # This check is double to `RoomShutdownHandler.shutdown_room`

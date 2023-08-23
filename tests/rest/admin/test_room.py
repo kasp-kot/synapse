@@ -551,6 +551,9 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertIn("delete_id", channel.json_body)
         delete_id = channel.json_body["delete_id"]
 
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+
         # get status
         channel = self.make_request(
             "GET",
@@ -668,6 +671,9 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertIn("delete_id", channel.json_body)
         delete_id1 = channel.json_body["delete_id"]
 
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+
         # go ahead
         self.reactor.advance(TaskScheduler.KEEP_TASKS_FOR_MS / 1000 / 2)
 
@@ -682,6 +688,9 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertEqual(200, channel.code, msg=channel.json_body)
         self.assertIn("delete_id", channel.json_body)
         delete_id2 = channel.json_body["delete_id"]
+
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
 
         # get status
         channel = self.make_request(
@@ -1113,6 +1122,8 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
             kicked_user: a user_id which is kicked from the room
             expect_new_room: if we expect that a new room was created
         """
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
 
         # get information by room_id
         channel_room_id = self.make_request(
