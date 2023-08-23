@@ -739,6 +739,51 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertEqual(404, channel.code, msg=channel.json_body)
         self.assertEqual(Codes.NOT_FOUND, channel.json_body["errcode"])
 
+    def test_delete_same_room_twice(self) -> None:
+        """Test that the call for delete a room at second time gives an exception."""
+
+        body = {"new_room_user_id": self.admin_user}
+
+        # first call to delete room
+        # and do not wait for finish the task
+        first_channel = self.make_request(
+            "DELETE",
+            self.url.encode("ascii"),
+            content=body,
+            access_token=self.admin_user_tok,
+            await_result=False,
+        )
+
+        # We need to wait for the task scheduler to run the task
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
+
+        # second call to delete room
+        second_channel = self.make_request(
+            "DELETE",
+            self.url.encode("ascii"),
+            content=body,
+            access_token=self.admin_user_tok,
+        )
+
+        self.assertEqual(400, second_channel.code, msg=second_channel.json_body)
+        self.assertEqual(Codes.UNKNOWN, second_channel.json_body["errcode"])
+        self.assertEqual(
+            f"Purge already in progress for {self.room_id}",
+            second_channel.json_body["error"],
+        )
+
+        # get result of first call
+        first_channel.await_result()
+        self.assertEqual(200, first_channel.code, msg=first_channel.json_body)
+        self.assertIn("delete_id", first_channel.json_body)
+
+        # check status after finish the task
+        self._test_result(
+            first_channel.json_body["delete_id"],
+            self.other_user,
+            expect_new_room=True,
+        )
+
     def test_purge_room_and_block(self) -> None:
         """Test to purge a room and block it.
         Members will not be moved to a new room and will not receive a message.
