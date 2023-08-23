@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, cast
 
 from twisted.python.failure import Failure
 
@@ -21,6 +21,7 @@ from synapse.api.constants import Direction, EventTypes, Membership
 from synapse.api.errors import SynapseError
 from synapse.api.filtering import Filter
 from synapse.events.utils import SerializeEventConfig
+from synapse.handlers.room import ShutdownRoomParams, ShutdownRoomResponse
 from synapse.handlers.worker_lock import NEW_EVENT_DURING_PURGE_LOCK_NAME
 from synapse.logging.opentracing import trace
 from synapse.metrics.background_process_metrics import run_as_background_process
@@ -691,8 +692,15 @@ class PaginationHandler:
         async def update_result(result: Optional[JsonMapping]) -> None:
             await self._task_scheduler.update_task(task.id, result=result)
 
+        shutdown_result = (
+            cast(ShutdownRoomResponse, task.result) if task.result else None
+        )
+
         shutdown_result = await self._room_shutdown_handler.shutdown_room(
-            room_id, task.params, task.result, update_result
+            room_id,
+            cast(ShutdownRoomParams, task.params),
+            shutdown_result,
+            update_result,
         )
 
         if task.params.get("purge", False):
@@ -706,7 +714,7 @@ class PaginationHandler:
     async def start_shutdown_and_purge_room(
         self,
         room_id: str,
-        shutdown_params: JsonMapping,
+        shutdown_params: ShutdownRoomParams,
     ) -> str:
         """Start off shut down and purge on a room.
 

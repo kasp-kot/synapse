@@ -1826,12 +1826,12 @@ class RoomShutdownHandler:
     async def shutdown_room(
         self,
         room_id: str,
-        params: JsonMapping,
-        result: Optional[JsonMapping] = None,
+        params: ShutdownRoomParams,
+        result: Optional[ShutdownRoomResponse] = None,
         update_result_fct: Optional[
             Callable[[Optional[JsonMapping]], Awaitable[None]]
         ] = None,
-    ) -> Optional[JsonMapping]:
+    ) -> Optional[ShutdownRoomResponse]:
         """
         Shuts down a room. Moves all local users and room aliases automatically
         to a new room if `new_room_user_id` is set. Otherwise local users only
@@ -1875,7 +1875,7 @@ class RoomShutdownHandler:
             )
 
         result = (
-            dict(result)
+            result
             if result
             else {
                 "kicked_users": [],
