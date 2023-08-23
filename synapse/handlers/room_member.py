@@ -37,6 +37,7 @@ from synapse.api.ratelimiting import Ratelimiter
 from synapse.event_auth import get_named_level, get_power_level_event
 from synapse.events import EventBase
 from synapse.events.snapshot import EventContext
+from synapse.handlers.pagination import PURGE_ROOM_ACTION_NAME
 from synapse.handlers.profile import MAX_AVATAR_URL_LEN, MAX_DISPLAYNAME_LEN
 from synapse.handlers.state_deltas import MatchChange, StateDeltasHandler
 from synapse.handlers.worker_lock import NEW_EVENT_DURING_PURGE_LOCK_NAME
@@ -318,7 +319,7 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
             and await self.store.is_locally_forgotten_room(room_id)
         ):
             await self.task_scheduler.schedule_task(
-                "purge_room",
+                PURGE_ROOM_ACTION_NAME,
                 resource_id=room_id,
                 timestamp=self.clock.time_msec() + self._purge_retention_period,
             )

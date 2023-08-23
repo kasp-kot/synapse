@@ -56,6 +56,13 @@ BACKFILL_BECAUSE_TOO_MANY_GAPS_THRESHOLD = 3
 PURGE_PAGINATION_LOCK_NAME = "purge_pagination_lock"
 
 
+PURGE_HISTORY_ACTION_NAME = "purge_history"
+
+PURGE_ROOM_ACTION_NAME = "purge_room"
+
+SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME = "shutdown_and_purge_room"
+
+
 class PaginationHandler:
     """Handles pagination and purge history requests.
 
@@ -108,10 +115,12 @@ class PaginationHandler:
                     job.longest_max_lifetime,
                 )
 
-        self._task_scheduler.register_action(self._purge_history, "purge_history")
-        self._task_scheduler.register_action(self._purge_room, "purge_room")
         self._task_scheduler.register_action(
-            self._shutdown_and_purge_room, "shutdown_and_purge_room"
+            self._purge_history, PURGE_HISTORY_ACTION_NAME
+        )
+        self._task_scheduler.register_action(self._purge_room, PURGE_ROOM_ACTION_NAME)
+        self._task_scheduler.register_action(
+            self._shutdown_and_purge_room, SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME
         )
 
     async def purge_history_for_rooms_in_range(
@@ -218,7 +227,7 @@ class PaginationHandler:
             # the background so that it's not blocking any other operation apart from
             # other purges in the same room.
             run_as_background_process(
-                "purge_history",
+                PURGE_HISTORY_ACTION_NAME,
                 self.purge_history,
                 room_id,
                 token,
@@ -240,7 +249,7 @@ class PaginationHandler:
             unique ID for this purge transaction.
         """
         purge_id = await self._task_scheduler.schedule_task(
-            "purge_history",
+            PURGE_HISTORY_ACTION_NAME,
             resource_id=room_id,
             params={"token": token, "delete_local_events": delete_local_events},
         )
@@ -336,7 +345,7 @@ class PaginationHandler:
             statuses.append(TaskStatus.COMPLETE)
 
         return await self._task_scheduler.get_tasks(
-            actions=["purge_room", "shutdown_and_purge_room"],
+            actions=[PURGE_ROOM_ACTION_NAME, SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME],
             resource_id=room_id,
             statuses=statuses,
         )
@@ -722,7 +731,7 @@ class PaginationHandler:
                 )
 
         delete_id = await self._task_scheduler.schedule_task(
-            "shutdown_and_purge_room",
+            SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME,
             resource_id=room_id,
             params=shutdown_params,
         )

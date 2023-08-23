@@ -24,6 +24,10 @@ from twisted.test.proto_helpers import MemoryReactor
 import synapse.rest.admin
 from synapse.api.constants import EventTypes, Membership, RoomTypes
 from synapse.api.errors import Codes
+from synapse.handlers.pagination import (
+    PURGE_ROOM_ACTION_NAME,
+    SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME,
+)
 from synapse.rest.client import directory, events, login, room
 from synapse.server import HomeServer
 from synapse.types import UserID
@@ -984,7 +988,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         # Schedule a purge 10 seconds in the future
         self.get_success(
             self.task_scheduler.schedule_task(
-                "purge_room",
+                PURGE_ROOM_ACTION_NAME,
                 resource_id=room_id,
                 timestamp=self.clock.time_msec() + 10 * 1000,
             )
@@ -1010,7 +1014,7 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         # Schedule a shutdown 10 seconds in the future
         delete_id = self.get_success(
             self.task_scheduler.schedule_task(
-                "shutdown_and_purge_room",
+                SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME,
                 resource_id=room_id,
                 params={
                     "requester_user_id": self.admin_user,

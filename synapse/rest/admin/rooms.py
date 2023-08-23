@@ -19,6 +19,10 @@ from urllib import parse as urlparse
 from synapse.api.constants import Direction, EventTypes, JoinRules, Membership
 from synapse.api.errors import AuthError, Codes, NotFoundError, SynapseError
 from synapse.api.filtering import Filter
+from synapse.handlers.pagination import (
+    PURGE_ROOM_ACTION_NAME,
+    SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME,
+)
 from synapse.http.servlet import (
     ResolveRoomIdMixin,
     RestServlet,
@@ -188,8 +192,8 @@ class DeleteRoomStatusByDeleteIdRestServlet(RestServlet):
 
         delete_task = await self._pagination_handler.get_delete_task(delete_id)
         if delete_task is None or (
-            delete_task.action != "purge_room"
-            and delete_task.action != "shutdown_and_purge_room"
+            delete_task.action != PURGE_ROOM_ACTION_NAME
+            and delete_task.action != SHUTDOWN_AND_PURGE_ROOM_ACTION_NAME
         ):
             raise NotFoundError("delete id '%s' not found" % delete_id)
 

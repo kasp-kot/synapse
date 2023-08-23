@@ -21,6 +21,7 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from synapse.api.errors import Codes, NotFoundError, SynapseError
+from synapse.handlers.pagination import PURGE_HISTORY_ACTION_NAME
 from synapse.http.server import HttpServer, JsonResource
 from synapse.http.servlet import RestServlet, parse_json_object_from_request
 from synapse.http.site import SynapseRequest
@@ -217,7 +218,7 @@ class PurgeHistoryStatusRestServlet(RestServlet):
         await assert_requester_is_admin(self.auth, request)
 
         purge_task = await self.pagination_handler.get_delete_task(purge_id)
-        if purge_task is None or purge_task.action != "purge_history":
+        if purge_task is None or purge_task.action != PURGE_HISTORY_ACTION_NAME:
             raise NotFoundError("purge id '%s' not found" % purge_id)
 
         result = {
