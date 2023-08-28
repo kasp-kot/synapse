@@ -555,9 +555,6 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertIn("delete_id", channel.json_body)
         delete_id = channel.json_body["delete_id"]
 
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
-
         # get status
         channel = self.make_request(
             "GET",
@@ -675,9 +672,6 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertIn("delete_id", channel.json_body)
         delete_id1 = channel.json_body["delete_id"]
 
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
-
         # go ahead
         self.reactor.advance(TaskScheduler.KEEP_TASKS_FOR_MS / 1000 / 2)
 
@@ -692,9 +686,6 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         self.assertEqual(200, channel.code, msg=channel.json_body)
         self.assertIn("delete_id", channel.json_body)
         delete_id2 = channel.json_body["delete_id"]
-
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # get status
         channel = self.make_request(
@@ -753,9 +744,6 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
             access_token=self.admin_user_tok,
             await_result=False,
         )
-
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
 
         # second call to delete room
         second_channel = self.make_request(
@@ -1043,9 +1031,8 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         with self.assertRaises(AssertionError):
             self._is_purged(room_id)
 
-        # Advance one hour in the future past `TaskScheduler.SCHEDULE_INTERVAL_MS` so that
-        # the automatic purging takes place and launch the purge
-        self.reactor.advance(ONE_HOUR_IN_S)
+        # Wait for next scheduler run
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
 
         self._is_purged(room_id)
 
@@ -1081,9 +1068,8 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
         with self.assertRaises(AssertionError):
             self._is_purged(room_id)
 
-        # Advance one hour in the future past `TaskScheduler.SCHEDULE_INTERVAL_MS` so that
-        # the automatic purging takes place and resumes the purge
-        self.reactor.advance(ONE_HOUR_IN_S)
+        # Wait for next scheduler run
+        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS)
 
         # Test that all users has been kicked (room is shutdown)
         self._has_no_members(room_id)
@@ -1171,9 +1157,6 @@ class DeleteRoomV2TestCase(unittest.HomeserverTestCase):
             kicked_user: a user_id which is kicked from the room
             expect_new_room: if we expect that a new room was created
         """
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
-
         # get information by room_id
         channel_room_id = self.make_request(
             "GET",

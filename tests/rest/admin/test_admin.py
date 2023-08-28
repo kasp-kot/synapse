@@ -364,9 +364,6 @@ class PurgeHistoryTestCase(unittest.HomeserverTestCase):
         self.assertIn("purge_id", channel.json_body)
         purge_id = channel.json_body["purge_id"]
 
-        # We need to wait for the task scheduler to run the task
-        self.reactor.advance(TaskScheduler.SCHEDULE_INTERVAL_MS / 1000)
-
         # get status
         channel = self.make_request(
             "GET",

@@ -264,7 +264,6 @@ class PaginationHandler:
     async def _purge_history(
         self,
         task: ScheduledTask,
-        first_launch: bool,
     ) -> Tuple[TaskStatus, Optional[JsonMapping], Optional[str]]:
         """
         Scheduler action to purge some history of a room.
@@ -349,7 +348,6 @@ class PaginationHandler:
     async def _purge_room(
         self,
         task: ScheduledTask,
-        first_launch: bool,
     ) -> Tuple[TaskStatus, Optional[JsonMapping], Optional[str]]:
         """
         Scheduler action to purge a room.
@@ -670,7 +668,6 @@ class PaginationHandler:
     async def _shutdown_and_purge_room(
         self,
         task: ScheduledTask,
-        first_launch: bool,
     ) -> Tuple[TaskStatus, Optional[JsonMapping], Optional[str]]:
         """
         Scheduler action to shutdown and purge a room.
