@@ -97,7 +97,6 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
         self.account_data_handler = hs.get_account_data_handler()
         self.event_auth_handler = hs.get_event_auth_handler()
         self._worker_lock_handler = hs.get_worker_locks_handler()
-        self.task_scheduler = hs.get_task_scheduler()
 
         self.member_linearizer: Linearizer = Linearizer(name="member")
         self.member_as_limiter = Linearizer(max_count=10, name="member_as_limiter")
@@ -318,7 +317,7 @@ class RoomMemberHandler(metaclass=abc.ABCMeta):
             and self._purge_retention_period
             and await self.store.is_locally_forgotten_room(room_id)
         ):
-            await self.task_scheduler.schedule_task(
+            await self.hs.get_task_scheduler().schedule_task(
                 PURGE_ROOM_ACTION_NAME,
                 resource_id=room_id,
                 timestamp=self.clock.time_msec() + self._purge_retention_period,
