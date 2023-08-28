@@ -24,7 +24,6 @@ from synapse.rest.admin import VersionServlet
 from synapse.rest.client import login, room
 from synapse.server import HomeServer
 from synapse.util import Clock
-from synapse.util.task_scheduler import TaskScheduler
 
 from tests import unittest
 from tests.server import FakeSite, make_request
